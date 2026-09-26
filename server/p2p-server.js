@@ -49,14 +49,29 @@ function cleanupTestRoomPermits(){
   const now=Date.now();
   for(const [key,p] of testRoomPermits)if(!p||Number(p.expiresAt)<=now)testRoomPermits.delete(key);
 }
-function testRoomPermit(rawToken){
-  const token=String(rawToken||'').trim();
-  if(!/^[a-f0-9]{64}$/i.test(token))return null;
+function usableTestPermitIp(value){
+  const ip=String(value||'').trim();
+  return ip&&ip!=='unknown'&&!ip.startsWith('unknown-')?ip:'';
+}
+function testRoomPermit(rawToken,ws){
   cleanupTestRoomPermits();
-  const key=tokenHash(token);
-  const permit=testRoomPermits.get(key);
-  if(!permit||Number(permit.expiresAt)<=Date.now())return null;
-  return {key,permit};
+
+  const token=String(rawToken||'').trim();
+  if(/^[a-f0-9]{64}$/i.test(token)){
+    const key=tokenHash(token);
+    const permit=testRoomPermits.get(key);
+    if(permit&&Number(permit.expiresAt)>Date.now())return {key,permit};
+  }
+
+  // Si el administrador ha activado MODO TEST, los demas navegadores de la
+  // misma conexion publica heredan el permiso sin copiar tokens entre ellos.
+  const meta=connectionMeta.get(ws)||{};
+  const ip=usableTestPermitIp(meta.ip);
+  if(!ip)return null;
+  for(const [key,permit] of testRoomPermits){
+    if(permit&&permit.ip===ip&&Number(permit.expiresAt)>Date.now())return {key,permit};
+  }
+  return null;
 }
 function activeHostedRooms(creatorKey){
   if(!creatorKey)return 0;
@@ -90,10 +105,11 @@ function normalIpKey(ws){
   return ip&&ip!=='unknown'&&!ip.startsWith('unknown-')?('ip:'+ip):'';
 }
 function roomCreationIdentity(identity,msg,ws){
-  const admin=testRoomPermit(msg&&msg.testRoomToken);
+  const admin=testRoomPermit(msg&&msg.testRoomToken,ws);
   if(admin){
+    const sessionKey=String(admin.permit.sessionKey||admin.key);
     return{
-      creatorKey:'test:'+admin.key,
+      creatorKey:'test:'+sessionKey,
       ipKey:'',
       roomLimit:Math.max(1,Math.min(TEST_ROOM_PERMIT_MAX,Number(admin.permit.maxRooms)||1)),
       testMode:true
@@ -573,10 +589,39 @@ async function authApi(req,res,url){
     let body;try{body=await readJsonBody(req,2048);}catch(_){sendJson(res,400,{ok:false,code:'BAD_REQUEST'});return true;}
     const maxRooms=Math.max(1,Math.min(TEST_ROOM_PERMIT_MAX,Math.floor(Number(body.maxRooms)||2)));
     cleanupTestRoomPermits();
+
+    const ip=usableTestPermitIp(requestIp(req));
+    let sessionKey='';
+    if(ip){
+      for(const [oldKey,permit] of testRoomPermits){
+        if(permit&&permit.ip===ip){
+          sessionKey=String(permit.sessionKey||oldKey);
+          testRoomPermits.delete(oldKey);
+        }
+      }
+    }
+    if(!sessionKey)sessionKey=randomBytes(16).toString('hex');
+
     const token=randomBytes(32).toString('hex');
     const expiresAt=Date.now()+TEST_ROOM_PERMIT_TTL_MS;
-    testRoomPermits.set(tokenHash(token),{maxRooms,expiresAt});
-    sendJson(res,200,{ok:true,token,maxRooms,expiresAt,ttlMs:TEST_ROOM_PERMIT_TTL_MS});
+    testRoomPermits.set(tokenHash(token),{maxRooms,expiresAt,ip,sessionKey});
+    sendJson(res,200,{ok:true,token,maxRooms,expiresAt,ttlMs:TEST_ROOM_PERMIT_TTL_MS,crossBrowser:!!ip});
+    return true;
+  }
+  if(url==='/api/cpu-training/test-room-permit/revoke'&&req.method==='POST'){
+    const allowed=await requireTrainingAdmin(req,res);if(!allowed)return true;
+    let body={};try{body=await readJsonBody(req,2048);}catch(_){}
+    cleanupTestRoomPermits();
+    const ip=usableTestPermitIp(requestIp(req));
+    const rawToken=String(body&&body.token||'').trim();
+    const tokenKey=/^[a-f0-9]{64}$/i.test(rawToken)?tokenHash(rawToken):'';
+    let revoked=0;
+    for(const [key,permit] of [...testRoomPermits]){
+      if((tokenKey&&key===tokenKey)||(ip&&permit&&permit.ip===ip)){
+        testRoomPermits.delete(key);revoked++;
+      }
+    }
+    sendJson(res,200,{ok:true,revoked});
     return true;
   }
   if(url==='/api/cpu-training/access'&&req.method==='GET'){
@@ -838,10 +883,15 @@ wss.on('connection',(ws,req)=>{
       const identity=await resolvePlayerIdentity(m);
       if(identity.error){send(ws,{t:'error',message:identity.error});return;}
       const creator=roomCreationIdentity(identity,m,ws);
-      if(!creator.testMode&&(
+      if(creator.testMode){
+        if(activeRoomParticipations(creator.creatorKey)>=creator.roomLimit){
+          send(ws,{t:'error',message:'LIMITE DE SALAS DE PRUEBA ALCANZADO.'});
+          return;
+        }
+      }else if(
         activeRoomParticipations(creator.creatorKey)>=1||
         activeIpParticipations(creator.ipKey)>=1
-      )){
+      ){
         send(ws,{t:'error',message:'YA ESTAS EN UNA SALA ACTIVA.'});
         return;
       }
@@ -864,10 +914,15 @@ wss.on('connection',(ws,req)=>{
       const identity=await resolvePlayerIdentity(m);
       if(identity.error){send(ws,{t:'error',message:identity.error});return;}
       const participant=roomCreationIdentity(identity,m,ws);
-      if(!participant.testMode&&(
+      if(participant.testMode){
+        if(activeRoomParticipations(participant.creatorKey)>=participant.roomLimit){
+          send(ws,{t:'error',message:'LIMITE DE SALAS DE PRUEBA ALCANZADO.'});
+          return;
+        }
+      }else if(
         activeRoomParticipations(participant.creatorKey)>=1||
         activeIpParticipations(participant.ipKey)>=1
-      )){
+      ){
         send(ws,{t:'error',message:'YA ESTAS EN UNA SALA ACTIVA.'});
         return;
       }
