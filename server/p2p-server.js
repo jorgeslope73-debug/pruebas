@@ -282,6 +282,19 @@ function publicRooms(){
     });
 }
 function publicUpdate(wss){const raw=JSON.stringify({t:'public-rooms',rooms:publicRooms()});for(const ws of wss.clients)if(ws.readyState===1)ws.send(raw);}
+function scheduleSoloHostClose(r,wss,delay=3000){
+  if(!r||!r.started||r.cpuFill||r.players.length!==1||!r.players[0]||r.players[0].i!==0)return false;
+  if(r.soloHostCloseTimer)return true;
+  r.soloHostCloseTimer=setTimeout(()=>{
+    r.soloHostCloseTimer=null;
+    const live=rooms.get(r.code);
+    if(live!==r||r.cpuFill||r.players.length!==1||!r.players[0]||r.players[0].i!==0)return;
+    broadcast(r,{t:'closed',reason:'La partida se cierra porque solo queda el anfitrion.'});
+    rooms.delete(r.code);
+    publicUpdate(wss);
+  },Math.max(0,Number(delay)||0));
+  return true;
+}
 function remove(ws,wss){
   const x=info.get(ws);if(!x)return;info.delete(ws);
   const r=rooms.get(x.code);if(!r)return;
@@ -290,12 +303,17 @@ function remove(ws,wss){
   const replaceWithCpu=!!(r.started&&r.cpuFill&&!host);
   r.players=r.players.filter(q=>q!==p);
   if(host){
+    if(r.soloHostCloseTimer){clearTimeout(r.soloHostCloseTimer);r.soloHostCloseTimer=null;}
     broadcast(r,{t:'closed',reason:'El anfitrion cerro la sala.'});
     rooms.delete(r.code);
   }else{
     const players=roster(r);
     broadcast(r,{t:'lobby',code:r.code,players,cpuFill:!!r.cpuFill,canStart:canStartRoom(r),started:!!r.started});
-    if(replaceWithCpu)broadcast(r,{t:'player-cpu-replaced',name:p.n,index:p.i});
+    if(r.started){
+      if(replaceWithCpu)broadcast(r,{t:'player-cpu-replaced',name:p.n,index:p.i});
+      else broadcast(r,{t:'player-left-live',name:p.n,index:p.i});
+    }
+    scheduleSoloHostClose(r,wss,3000);
   }
   publicUpdate(wss);
 }
@@ -325,8 +343,12 @@ function expireDisconnectedPlayers(wss){
         for(const p of expired)broadcast(r,{t:'player-cpu-replaced',name:p.n,index:p.i});
         publicUpdate(wss);continue;
       }
-      broadcast(r,{t:'closed',reason:'Un jugador perdio la conexion.'});
-      rooms.delete(r.code);publicUpdate(wss);continue;
+      for(const p of expired)if(p.i!==0)r.players=r.players.filter(q=>q!==p);
+      const players=roster(r);
+      broadcast(r,{t:'lobby',code:r.code,players,cpuFill:false,canStart:false,started:true});
+      for(const p of expired)if(p.i!==0)broadcast(r,{t:'player-left-live',name:p.n,index:p.i});
+      scheduleSoloHostClose(r,wss,3000);
+      publicUpdate(wss);continue;
     }
     let hostLost=false;
     for(const p of expired){if(p.i===0)hostLost=true;r.players=r.players.filter(q=>q!==p);}
