@@ -357,6 +357,25 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
   font:800 9px/1.1 Arial,Helvetica,sans-serif;
   letter-spacing:.14em;
 }
+
+/* V19.6: abandono con el mismo lenguaje visual que la incorporacion. */
+.player-change-notice.player-leave-notice{
+  border-color:rgba(255,74,74,.48);
+  box-shadow:0 4px 18px rgba(0,0,0,.26),0 0 14px rgba(255,66,66,.16);
+}
+.player-change-notice .player-leave-copy{
+  display:block;
+  color:#ff4d4d;
+  font:900 25px/.95 Arial,Helvetica,sans-serif;
+  letter-spacing:.08em;
+  text-shadow:0 0 9px rgba(255,64,64,.46);
+}
+.player-change-notice .player-leave-detail{
+  display:block;
+  color:rgba(242,238,250,.62);
+  font:800 8px/1.1 Arial,Helvetica,sans-serif;
+  letter-spacing:.12em;
+}
 @media (pointer:coarse),(max-width:900px){
   .player-change-notice.player-join-notice{
     min-width:min(280px,70vw);
@@ -365,4 +384,6 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
   }
   .player-change-notice .player-join-name{font-size:18px}
   .player-change-notice .player-join-copy{font-size:8px}
+  .player-change-notice .player-leave-copy{font-size:21px}
+  .player-change-notice .player-leave-detail{font-size:7px}
 }
