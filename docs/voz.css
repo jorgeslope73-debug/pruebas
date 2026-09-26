@@ -49,18 +49,18 @@
 .voice-ptt::before{display:none!important;content:none!important}
 .voice-ptt.talking{background:transparent!important;border:0!important;box-shadow:none!important}
 .voice-ptt:active{transform:translateX(-50%)}
-/* V19.10: en modo BOTONES el PTT queda centrado debajo de las dos flechas.
-   La flecha derecha se acerca a la izquierda para compactar el control. */
+/* V19.11: controles BOTONES mas compactos; el PTT sigue centrado
+   debajo de las dos flechas tras acercar aun mas la flecha derecha. */
 @media (pointer:coarse),(max-width:900px){
   #mobileControls.button-mode:not(.keyboard-mode) ~ .voice-ptt{
-    left:calc(17vw + 112px);
+    left:calc(17vw + 104px);
     bottom:max(12px,calc(env(safe-area-inset-bottom) + 6px));
     width:54px;height:54px;min-width:54px;min-height:54px;
   }
 }
 @media (orientation:landscape) and (max-height:520px){
   #mobileControls.button-mode:not(.keyboard-mode) ~ .voice-ptt{
-    left:calc(17vw + 104px);
+    left:calc(17vw + 96px);
     bottom:max(10px,calc(env(safe-area-inset-bottom) + 4px));
     width:50px;height:50px;min-width:50px;min-height:50px;
   }
