@@ -1,6 +1,6 @@
 # Galaxy Combat Web
 
-**Versión actual: V19.8**
+**Versión actual: V19.9**
 
 Galaxy Combat es un juego de combate espacial para navegador, gratuito y sin instalación obligatoria. Permite jugar contra CPU o en partidas online de hasta 4 jugadores.
 
@@ -26,6 +26,7 @@ La física de las partidas online se ejecuta en el navegador del anfitrión. El 
 - El nuevo jugador sustituye una CPU sin reiniciar la partida y entra con 0 bajas, 5 balas y mejoras a cero.
 - Si un humano ocupa una plaza CPU entre rondas, el roster convierte esa plaza en humana antes de reiniciar; nunca se mezclan controles CPU y humanos.
 - Al incorporarse un jugador a una partida ya en curso, aparece durante 3 segundos un aviso inferior transparente con su nombre grande en el color de su plaza.
+- Partida online sin CPU: si un jugador no anfitrión abandona o agota los 30 segundos de reconexión, desaparece del roster y se muestra durante 3 segundos el mismo aviso `ABANDONA`. Si tras su salida solo queda el anfitrión, la partida se cierra automáticamente después de mostrar el aviso. Con tres o cuatro humanos, la partida puede continuar mientras queden al menos dos jugadores.
 - Si un jugador no anfitrión pierde el WebSocket, su plaza se reserva durante 30 segundos.
 - Si no vuelve y hay CPU de relleno, su plaza vuelve a CPU y la partida continúa.
 - Cuando un jugador no anfitrion abandona una partida con CPU de relleno, su misma plaza pasa a CPU sin detener la partida. El aviso de salida usa el mismo estilo visual que el de entrada: nombre grande en el color de su plaza, la palabra ABANDONA destacada en rojo y más grande, y debajo el aviso discreto de la CPU que ocupa su puesto.
