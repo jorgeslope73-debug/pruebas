@@ -634,12 +634,14 @@
       });
       if(this.fxEvents.length>32)this.fxEvents.splice(0,this.fxEvents.length-32);
     }
-    destroyShip(victim,attacker=null,weaponTheft=false){
+    destroyShip(victim,attacker=null,weaponTheft=false,scorePenalty=false){
       if(victim.dead||this.finished)return;
       if(victim.protection>0||victim.shield>0){this.emitShipImpact(victim,attacker,false);return;}
       victim.dead=true;victim.respawn=.7;victim.vx=victim.vy=0;victim.deaths++;
       if(!victim.cpu)this.humanMeteorDecision=null;
-      if(!attacker||attacker===victim)victim.kills=Math.max(0,victim.kills-1);
+      // Estrellarse, autodestruirse o morir por disparo/misil resta una baja.
+      // La puntuacion nunca baja de cero; el cliente ya muestra PENALIZACION -1.
+      if(!attacker||attacker===victim||scorePenalty)victim.kills=Math.max(0,victim.kills-1);
 
       // ROBO DE ARMAMENTO solo ocurre por EMBESTIDA: un jugador con
       // escudo activo choca fisicamente con un rival sin escudo y lo destruye.
@@ -1119,7 +1121,7 @@
               if(p.shield<=0){
                 const brutal=attacker&&attacker!==p&&(b.travel||0)>=BRUTAL_SHOT_DISTANCE;
                 if(brutal)this.emit({t:'brutal',distance:Math.round(b.travel||0),shooter:attacker.name||('J'+(attacker.index+1)),shooterIndex:attacker.index});
-                this.destroyShip(p,attacker);
+                this.destroyShip(p,attacker,false,true);
               }else this.emitShipImpact(p,b,false);
               remove=true;break;
             }
