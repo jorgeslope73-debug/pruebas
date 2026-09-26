@@ -1628,6 +1628,30 @@
       hidePlayerChangeNotice();
     },3000);
   }
+  function showPlayerLeftNotice(name,index){
+    if(!playerChangeNotice)return;
+    clearTimeout(playerChangeNoticeTimer);
+    const idx=Math.max(0,Math.min(3,Number(index)||0));
+    const cleanName=sinTildes(String(name||tr('defaultPlayer')).trim());
+    playerChangeNotice.textContent='';
+    playerChangeNotice.classList.add('player-join-notice','player-leave-notice');
+    playerChangeNotice.style.setProperty('--join-player-color',playerColors[idx]||'#fff');
+
+    const nameEl=document.createElement('strong');
+    nameEl.className='player-join-name';
+    nameEl.textContent=cleanName;
+
+    const leaveEl=document.createElement('span');
+    leaveEl.className='player-leave-copy';
+    leaveEl.textContent=tr('playerLeftNotice');
+
+    playerChangeNotice.append(nameEl,leaveEl);
+    playerChangeNotice.classList.remove('hidden');
+    playerChangeNoticeTimer=setTimeout(()=>{
+      playerChangeNoticeTimer=null;
+      hidePlayerChangeNotice();
+    },3000);
+  }
   function showPlayerJoinedNotice(name,index){
     if(!playerChangeNotice)return;
     clearTimeout(playerChangeNoticeTimer);
@@ -1654,6 +1678,7 @@
       publicRooms=Array.isArray(m.rooms)?m.rooms:[];renderPublicRooms();return;
     }
     if(m.t==='player-cpu-replaced'){showPlayerCpuReplaceNotice(m.name,m.index);return;}
+    if(m.t==='player-left-live'){showPlayerLeftNotice(m.name,m.index);return;}
     if(m.t==='player-joined-live'){showPlayerJoinedNotice(m.name,m.index);return;}
     if(m.t==='chat-history'){loadLobbyChatHistory(m.messages);return;}
     if(m.t==='chat'){appendLobbyChatMessage(m);return;}
