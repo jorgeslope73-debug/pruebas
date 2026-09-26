@@ -74,31 +74,48 @@ function activeRoomParticipations(participantKey){
   }
   return count;
 }
+function activeIpParticipations(ipKey){
+  if(!ipKey)return 0;
+  let count=0;
+  for(const room of rooms.values()){
+    for(const p of (room&&Array.isArray(room.players)?room.players:[])){
+      if(p&&p.ipKey===ipKey)count++;
+    }
+  }
+  return count;
+}
+function normalIpKey(ws){
+  const meta=connectionMeta.get(ws)||{};
+  const ip=String(meta.ip||'').trim();
+  return ip&&ip!=='unknown'&&!ip.startsWith('unknown-')?('ip:'+ip):'';
+}
 function roomCreationIdentity(identity,msg,ws){
   const admin=testRoomPermit(msg&&msg.testRoomToken);
   if(admin){
     return{
       creatorKey:'test:'+admin.key,
+      ipKey:'',
       roomLimit:Math.max(1,Math.min(TEST_ROOM_PERMIT_MAX,Number(admin.permit.maxRooms)||1)),
       testMode:true
     };
   }
+
+  const ipKey=normalIpKey(ws);
   if(identity&&identity.registered&&identity.userId){
-    // Una cuenta registrada se identifica por usuario: dos personas distintas
-    // de una misma casa pueden jugar si cada una usa su propia cuenta.
-    return{creatorKey:'user:'+String(identity.userId),roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
+    // La cuenta sigue identificando al usuario, pero ademas se aplica la IP:
+    // una segunda pestaña/navegador en la misma conexion no puede entrar como
+    // otro jugador usando otra cuenta o como invitado.
+    return{creatorKey:'user:'+String(identity.userId),ipKey,roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
   }
 
-  // Invitados: usamos la IP publica como identidad principal para que cambiar
-  // de navegador no permita abrir otra participacion simultanea. El clientId
-  // queda solo como respaldo si el proxy no facilita una IP util.
-  const meta=connectionMeta.get(ws)||{};
-  const ip=String(meta.ip||'').trim();
-  if(ip&&ip!=='unknown'&&!ip.startsWith('unknown-'))return{creatorKey:'ip:'+ip,roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
+  // Invitados: la IP publica es la identidad principal. Si el proxy no
+  // facilita una IP valida, mantenemos el clientId como respaldo para no
+  // perjudicar el funcionamiento del juego.
+  if(ipKey)return{creatorKey:ipKey,ipKey,roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
 
   const clientId=safeClientId(msg&&msg.clientId);
-  if(clientId)return{creatorKey:'client:'+clientId,roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
-  return{creatorKey:'connection:unknown',roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
+  if(clientId)return{creatorKey:'client:'+clientId,ipKey:'',roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
+  return{creatorKey:'connection:unknown',ipKey:'',roomLimit:NORMAL_HOST_ROOM_LIMIT,testMode:false};
 }
 
 async function hashPassword(password,saltHex=''){
@@ -799,7 +816,10 @@ wss.on('connection',(ws,req)=>{
       const identity=await resolvePlayerIdentity(m);
       if(identity.error){send(ws,{t:'error',message:identity.error});return;}
       const creator=roomCreationIdentity(identity,m,ws);
-      if(!creator.testMode&&activeRoomParticipations(creator.creatorKey)>=1){
+      if(!creator.testMode&&(
+        activeRoomParticipations(creator.creatorKey)>=1||
+        activeIpParticipations(creator.ipKey)>=1
+      )){
         send(ws,{t:'error',message:'YA ESTAS EN UNA SALA ACTIVA.'});
         return;
       }
@@ -808,7 +828,7 @@ wss.on('connection',(ws,req)=>{
         return;
       }
       const r={code:roomCode(),public:!!m.public,lang:String(m.lang||'es'),started:false,players:[],cpuFill:false,rankEligible:false,rankRecorded:false,rankMatchId:null,rankRound:0,createdAt:Date.now(),creatorKey:creator.creatorKey,testMode:creator.testMode};
-      const p={i:0,n:identity.name,ws,userId:identity.userId,registered:identity.registered,participantKey:creator.creatorKey,playerToken:newPlayerToken(),disconnectedAt:0,voiceReady:false};
+      const p={i:0,n:identity.name,ws,userId:identity.userId,registered:identity.registered,participantKey:creator.creatorKey,ipKey:creator.ipKey,playerToken:newPlayerToken(),disconnectedAt:0,voiceReady:false};
       r.players.push(p);rooms.set(r.code,r);info.set(ws,{code:r.code,i:0});
       send(ws,{t:'created',code:r.code,index:0,public:r.public,playerToken:p.playerToken,registered:p.registered,p2p:true});
       broadcast(r,{t:'lobby',code:r.code,players:roster(r),cpuFill:false,canStart:false});publicUpdate(wss);return;
@@ -822,7 +842,10 @@ wss.on('connection',(ws,req)=>{
       const identity=await resolvePlayerIdentity(m);
       if(identity.error){send(ws,{t:'error',message:identity.error});return;}
       const participant=roomCreationIdentity(identity,m,ws);
-      if(!participant.testMode&&activeRoomParticipations(participant.creatorKey)>=1){
+      if(!participant.testMode&&(
+        activeRoomParticipations(participant.creatorKey)>=1||
+        activeIpParticipations(participant.ipKey)>=1
+      )){
         send(ws,{t:'error',message:'YA ESTAS EN UNA SALA ACTIVA.'});
         return;
       }
@@ -849,7 +872,7 @@ wss.on('connection',(ws,req)=>{
       }
       if(i<0){send(ws,{t:'error',message:'Sala llena.'});return;}
 
-      const p={i,n:identity.name,ws,userId:identity.userId,registered:identity.registered,participantKey:participant.creatorKey,playerToken:newPlayerToken(),disconnectedAt:0,voiceReady:false};
+      const p={i,n:identity.name,ws,userId:identity.userId,registered:identity.registered,participantKey:participant.creatorKey,ipKey:participant.ipKey,playerToken:newPlayerToken(),disconnectedAt:0,voiceReady:false};
       r.players.push(p);info.set(ws,{code:r.code,i});
       const players=roster(r);
       send(ws,{t:'joined',code:r.code,index:i,public:r.public,playerToken:p.playerToken,registered:p.registered,p2p:true,started:!!r.started,players,cpuFill:!!r.cpuFill,liveJoin});
