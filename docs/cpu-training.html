@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Galaxy Combat · Entrenamiento CPU</title>
 <script src="config.js"></script>
-<script src="local-cpu.js?v=V19.2"></script>
+<script src="local-cpu.js?v=V19.12"></script>
 <style>
 :root{color-scheme:dark;--bg:#060813;--panel:#101526;--line:#283451;--text:#eef6ff;--muted:#92a4bf;--cyan:#5ae1ff;--pink:#ff50a5;--green:#5aff78;--yellow:#ffdc46}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 18% 0,#16243e 0,#070914 42%,#03050a 100%);color:var(--text);font-family:Arial,Helvetica,sans-serif}
@@ -74,7 +74,7 @@ canvas{display:block;width:100%;height:auto;aspect-ratio:16/9}.lock{padding:40px
         <button id="disableTestRooms" type="button">DESACTIVAR</button>
         <span id="testRoomStatus" class="muted">USUARIOS NORMALES: 1 SALA</span>
       </div>
-      <p class="muted" style="margin:9px 0 0;font-size:12px">El permiso se guarda solo en este navegador y dura 8 horas. Funciona también si estás fuera de casa; no depende de tu IP.</p>
+      <p class="muted" style="margin:9px 0 0;font-size:12px">El permiso dura 8 horas y se aplica también a otros navegadores de tu misma conexión pública. El número elegido limita las participaciones de prueba simultáneas, tanto creando salas como uniéndote a ellas.</p>
     </section>
 
     <section class="panel">
@@ -285,16 +285,26 @@ async function activateTestRooms(){
     const d=await json('/api/cpu-training/test-room-permit',{method:'POST',body:JSON.stringify({maxRooms})});
     localStorage.setItem(TEST_ROOM_PERMIT_STORAGE,JSON.stringify({token:d.token,maxRooms:d.maxRooms,expiresAt:d.expiresAt}));
     updateTestRoomPermitUi();
-    log('Modo TEST activado · máximo '+d.maxRooms+' salas simultáneas durante 8 horas.');
+    log('Modo TEST activado · máximo '+d.maxRooms+' participaciones simultáneas · otros navegadores de esta conexión también autorizados durante 8 horas.');
   }catch(e){
     log('ERROR activando modo TEST: '+e.message);
   }
 }
 $('activateTestRooms').addEventListener('click',activateTestRooms);
-$('disableTestRooms').addEventListener('click',()=>{
+$('disableTestRooms').addEventListener('click',async()=>{
+  let token='';
+  try{
+    const data=JSON.parse(localStorage.getItem(TEST_ROOM_PERMIT_STORAGE)||'null');
+    token=String(data&&data.token||'').trim();
+  }catch(_){}
+  try{
+    await json('/api/cpu-training/test-room-permit/revoke',{method:'POST',body:JSON.stringify({token})});
+    log('Modo TEST desactivado para esta conexión y sus navegadores.');
+  }catch(e){
+    log('ERROR desactivando MODO TEST en servidor: '+e.message);
+  }
   try{localStorage.removeItem(TEST_ROOM_PERMIT_STORAGE)}catch(_){}
   updateTestRoomPermitUi();
-  log('Modo TEST desactivado en este navegador.');
 });
 updateTestRoomPermitUi();
 $('speed').addEventListener('change',()=>{speed=Math.max(1,Number($('speed').value)||1);$('speedValue').textContent='x'+speed;log('Velocidad x'+speed+'.')});
