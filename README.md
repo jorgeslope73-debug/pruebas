@@ -1,6 +1,6 @@
 # Galaxy Combat Web
 
-**Versión actual: V19.9**
+**Versión actual: V19.10**
 
 Galaxy Combat es un juego de combate espacial para navegador, gratuito y sin instalación obligatoria. Permite jugar contra CPU o en partidas online de hasta 4 jugadores.
 
@@ -40,6 +40,7 @@ La física de las partidas online se ejecuta en el navegador del anfitrión. El 
 - Manual: se documenta la MIRA / misil dirigido en español, inglés, italiano, francés y alemán, incluida su cápsula y la regla de 1 bala cuando se recoge sin munición.
 - Manual · HUD: se conserva la imagen completa del HUD y las casillas de munición, cadencia y velocidad muestran ahora sus iconos de `municion1.png`, `cadencia.png` y `velocidad.png`.
 - Móvil · modo BOTONES: se elimina el control de audio de la partida. Si la voz está activada, el botón PTT del micrófono se coloca entre las flechas izquierda/derecha, ligeramente más abajo, para tener acceso rápido sin invadir la zona de acelerar.
+- Móvil · modo BOTONES: la flecha derecha se acerca 16 px hacia la izquierda para compactar el control. El botón PTT de voz queda centrado horizontalmente entre las dos flechas y ligeramente por debajo, manteniendo libre la zona de acelerar.
 
 - BRUTAL: el rótulo se dibuja en una capa baja, por detrás de meteoritos, asteroides, naves, balas y mejoras, para no ocultar la acción ni la posición del jugador.
 
