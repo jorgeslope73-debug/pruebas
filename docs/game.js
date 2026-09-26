@@ -1595,18 +1595,33 @@
   function hidePlayerChangeNotice(){
     if(!playerChangeNotice)return;
     playerChangeNotice.classList.add('hidden');
-    playerChangeNotice.classList.remove('player-join-notice');
+    playerChangeNotice.classList.remove('player-join-notice','player-leave-notice');
     playerChangeNotice.style.removeProperty('--join-player-color');
     playerChangeNotice.textContent='';
   }
   function showPlayerCpuReplaceNotice(name,index){
     if(!playerChangeNotice)return;
     clearTimeout(playerChangeNoticeTimer);
-    playerChangeNotice.classList.remove('player-join-notice');
-    playerChangeNotice.style.removeProperty('--join-player-color');
+    const idx=Math.max(0,Math.min(3,Number(index)||0));
     const cleanName=sinTildes(String(name||tr('defaultPlayer')).trim());
-    const slot=Math.max(1,Math.min(4,(Number(index)||0)+1));
-    playerChangeNotice.textContent=tr('playerCpuReplaceNotice',{name:cleanName,index:slot});
+    const slot=idx+1;
+    playerChangeNotice.textContent='';
+    playerChangeNotice.classList.add('player-join-notice','player-leave-notice');
+    playerChangeNotice.style.setProperty('--join-player-color',playerColors[idx]||'#fff');
+
+    const nameEl=document.createElement('strong');
+    nameEl.className='player-join-name';
+    nameEl.textContent=cleanName;
+
+    const leaveEl=document.createElement('span');
+    leaveEl.className='player-leave-copy';
+    leaveEl.textContent=tr('playerLeftNotice');
+
+    const detailEl=document.createElement('span');
+    detailEl.className='player-leave-detail';
+    detailEl.textContent=tr('playerCpuReplaceNotice',{index:slot});
+
+    playerChangeNotice.append(nameEl,leaveEl,detailEl);
     playerChangeNotice.classList.remove('hidden');
     playerChangeNoticeTimer=setTimeout(()=>{
       playerChangeNoticeTimer=null;
