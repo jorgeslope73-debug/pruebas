@@ -214,7 +214,7 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
     display:flex;
     align-items:center;
     justify-content:center;
-    gap:56px;
+    gap:40px;
   }
   #mobileControls.button-mode .mobile-turn-button{
     position:relative;
