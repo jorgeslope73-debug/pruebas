@@ -201,6 +201,32 @@
     syncRoster(playerList=[]){
       const list=(Array.isArray(playerList)?playerList:[]).filter(x=>x&&Number.isInteger(Number(x.i))).slice(0,4);
       let changed=false;
+
+      // El roster recibido del servidor es la autoridad. Si un humano abandona
+      // una partida sin CPU, su plaza deja de existir y debe desaparecer tambien
+      // de la fisica, del HUD y de cualquier proyectil/objetivo asociado.
+      const activeIndices=new Set(list.map(item=>Number(item.i)));
+      const removedIndices=this.players.filter(p=>!activeIndices.has(p.index)).map(p=>p.index);
+      if(removedIndices.length){
+        const removedSet=new Set(removedIndices);
+        this.players=this.players.filter(p=>!removedSet.has(p.index));
+        this.bullets=this.bullets.filter(b=>!removedSet.has(Number(b.owner)));
+        for(const index of removedIndices)this.controls.delete(index);
+        for(const p of this.players){
+          if(removedSet.has(Number(p.guidedTarget))){
+            p.guidedTarget=-1;
+            p.guided=false;
+          }
+        }
+        if(removedSet.has(Number(this.huntTargetIndex))){
+          this.huntTargetIndex=-1;
+          this.huntUntil=0;
+          this.huntStartsAt=0;
+          this.huntThresholdActive=false;
+        }
+        changed=true;
+      }
+
       for(const item of list){
         const index=Number(item.i),isCpu=!!item.cpu;
         let p=this.players.find(x=>x.index===index);
