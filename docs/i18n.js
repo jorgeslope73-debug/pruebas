@@ -13,11 +13,11 @@
   Object.assign(dictionaries.it,{playingStatus:'IN GIOCO',waitingStatus:'IN ATTESA',joinCpuSlot:'Entra come giocatore J{index}'});
   Object.assign(dictionaries.fr,{playingStatus:'EN JEU',waitingStatus:'EN ATTENTE',joinCpuSlot:'Rejoindre comme joueur J{index}'});
   Object.assign(dictionaries.de,{playingStatus:'SPIELT',waitingStatus:'WARTET',joinCpuSlot:'Als Spieler J{index} beitreten'});
-  Object.assign(dictionaries.es,{playerCpuReplaceNotice:'{name} abandona partida, CPU J{index} entra'});
-  Object.assign(dictionaries.en,{playerCpuReplaceNotice:'{name} leaves the match, CPU J{index} joins'});
-  Object.assign(dictionaries.it,{playerCpuReplaceNotice:'{name} lascia la partita, entra CPU J{index}'});
-  Object.assign(dictionaries.fr,{playerCpuReplaceNotice:'{name} quitte la partie, CPU J{index} entre'});
-  Object.assign(dictionaries.de,{playerCpuReplaceNotice:'{name} verlaesst das Spiel, CPU J{index} uebernimmt'});
+  Object.assign(dictionaries.es,{playerLeftNotice:'ABANDONA',playerCpuReplaceNotice:'CPU J{index} ENTRA'});
+  Object.assign(dictionaries.en,{playerLeftNotice:'LEAVES',playerCpuReplaceNotice:'CPU J{index} JOINS'});
+  Object.assign(dictionaries.it,{playerLeftNotice:'ABBANDONA',playerCpuReplaceNotice:'ENTRA CPU J{index}'});
+  Object.assign(dictionaries.fr,{playerLeftNotice:'QUITTE',playerCpuReplaceNotice:'CPU J{index} ENTRE'});
+  Object.assign(dictionaries.de,{playerLeftNotice:'VERLAESST',playerCpuReplaceNotice:'CPU J{index} UEBERNIMMT'});
   Object.assign(dictionaries.es,{playerJoinedNotice:'ENTRA EN PARTIDA'});
   Object.assign(dictionaries.en,{playerJoinedNotice:'JOINS THE MATCH'});
   Object.assign(dictionaries.it,{playerJoinedNotice:'ENTRA IN PARTITA'});
