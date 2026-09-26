@@ -331,8 +331,10 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
 
 /* V18.84: incorporacion de jugador en partida activa. */
 .player-change-notice.player-join-notice{
-  min-width:min(340px,72vw);
-  padding:8px 18px 9px;
+  width:max-content;
+  min-width:0;
+  max-width:min(520px,86vw);
+  padding:8px 15px 9px;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -353,9 +355,9 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
 }
 .player-change-notice .player-join-copy{
   display:block;
-  color:rgba(242,238,250,.72);
-  font:800 9px/1.1 Arial,Helvetica,sans-serif;
-  letter-spacing:.14em;
+  color:rgba(242,238,250,.76);
+  font:900 13px/1.05 Arial,Helvetica,sans-serif;
+  letter-spacing:.12em;
 }
 
 /* V19.6: abandono con el mismo lenguaje visual que la incorporacion. */
@@ -366,7 +368,7 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
 .player-change-notice .player-leave-copy{
   display:block;
   color:#ff4d4d;
-  font:900 25px/.95 Arial,Helvetica,sans-serif;
+  font:900 29px/.95 Arial,Helvetica,sans-serif;
   letter-spacing:.08em;
   text-shadow:0 0 9px rgba(255,64,64,.46);
 }
@@ -378,12 +380,14 @@ label{display:block;text-align:left;margin:10px 0 6px}input,select,button{font:i
 }
 @media (pointer:coarse),(max-width:900px){
   .player-change-notice.player-join-notice{
-    min-width:min(280px,70vw);
-    padding:6px 14px 7px;
+    width:max-content;
+    min-width:0;
+    max-width:78vw;
+    padding:6px 12px 7px;
     background:rgba(4,7,18,.42);
   }
   .player-change-notice .player-join-name{font-size:18px}
-  .player-change-notice .player-join-copy{font-size:8px}
-  .player-change-notice .player-leave-copy{font-size:21px}
+  .player-change-notice .player-join-copy{font-size:11px}
+  .player-change-notice .player-leave-copy{font-size:24px}
   .player-change-notice .player-leave-detail{font-size:7px}
 }
