@@ -1,6 +1,6 @@
 # Galaxy Combat Web
 
-**Versión actual: V19.11**
+**Versión actual: V19.12**
 
 Galaxy Combat es un juego de combate espacial para navegador, gratuito y sin instalación obligatoria. Permite jugar contra CPU o en partidas online de hasta 4 jugadores.
 
@@ -44,7 +44,7 @@ La física de las partidas online se ejecuta en el navegador del anfitrión. El 
 
 - BRUTAL: el rótulo se dibuja en una capa baja, por detrás de meteoritos, asteroides, naves, balas y mejoras, para no ocultar la acción ni la posición del jugador.
 
-- Salas online: un usuario normal solo puede estar en 1 sala activa a la vez: o crea una sala o se une a una. La restricción se aplica también por IP pública tanto a registrados como a invitados, por lo que desde la misma conexión no se puede crear con una cuenta y entrar después desde otro navegador, otra cuenta o como invitado. Si el servidor no puede obtener una IP válida, conserva la protección por cuenta o por identificador local del navegador para no bloquear el juego. El MODO TEST activado desde la página privada de entrenamiento queda completamente exento de esta exclusividad: permite crear varias salas (entre 2 y 10 según el permiso) y también unirse a salas para realizar pruebas. El permiso dura 8 horas.\n\n## Control móvil
+- Salas online: un usuario normal solo puede estar en 1 sala activa a la vez: o crea una sala o se une a una. La restricción se aplica también por IP pública tanto a registrados como a invitados, por lo que desde la misma conexión no se puede crear con una cuenta y entrar después desde otro navegador, otra cuenta o como invitado. Si el servidor no puede obtener una IP válida, conserva la protección por cuenta o por identificador local del navegador para no bloquear el juego. El MODO TEST activado desde la página privada de entrenamiento autoriza durante 8 horas a los navegadores que salgan por la misma IP pública. El límite elegido (2–10) se aplica al total de participaciones de prueba simultáneas, tanto creando salas como uniéndose a ellas. El token del navegador administrador sigue funcionando como respaldo si cambia de red.\n\n## Control móvil
 
 Se juega en horizontal.
 
